@@ -1,18 +1,13 @@
 package com.egorshustov.threadingtest
 
 import android.os.Bundle
-import android.os.Handler
-import android.util.Log
+import android.os.Message
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
-    private val mainHandler = Handler()
-
-    @Volatile
-    private var stopThread = false
+    private val exampleThread = ExampleThread()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -20,24 +15,28 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun startThread(view: View) {
-        stopThread = false
-        Thread {
-            for (i in 0 until 10) {
-                if (stopThread) return@Thread
-                if (i == 5) {
-                    //mainHandler.post { button_start_thread.text = "50%" }
-                    //Handler(Looper.getMainLooper()).post { button_start_thread.text = "50%" }
-                    //button_start_thread.post { button_start_thread.text = "50%" }
-                    runOnUiThread { button_start_thread.text = "50%" }
-                }
-                Log.d(TAG, "startThread ${Thread.currentThread().name}: $i")
-                Thread.sleep(1000)
-            }
-        }.start()
+        exampleThread.start()
     }
 
     fun stopThread(view: View) {
-        stopThread = true
+        exampleThread.looper.quit() // or exampleThread.handler.looper.quit()
+    }
+
+    fun taskA(view: View) {
+        val message = Message.obtain().apply { what = ExampleHandler.TASK_A }
+        exampleThread.handler.sendMessage(message)
+
+        /*Handler(exampleThread.looper).post {
+            for (i in 0 until 5) {
+                Log.d(TAG, "run(): ${Thread.currentThread().name}: $i")
+                Thread.sleep(1000)
+            }
+        }*/
+    }
+
+    fun taskB(view: View) {
+        val message = Message.obtain().apply { what = ExampleHandler.TASK_B }
+        exampleThread.handler.sendMessage(message)
     }
 
     companion object {
